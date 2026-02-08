@@ -1,7 +1,6 @@
 def recommend_action(severity_level):
-    """
-    Maps predicted severity level to relief actions
-    """
+    """Maps predicted severity level to relief actions"""
+
     if severity_level == "Low":
         return {
             "priority": 3,
