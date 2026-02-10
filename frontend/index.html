@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Disaster Relief Decision System</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="container">
+    <h1>Disaster Relief Decision System</h1>
+
+    <form id="disasterForm">
+        <label>Severity Score</label>
+        <input type="number" step="0.1" id="severity_score" required />
+
+        <label>Total Affected</label>
+        <input type="number" id="total_affected" required />
+
+        <label>Infrastructure Damage</label>
+        <input type="number" step="0.1" id="infrastructure_damage" required />
+
+        <label>Area Affected</label>
+        <input type="number" step="0.1" id="area_affected" required />
+
+        <button type="submit">Predict Priority</button>
+    </form>
+
+    <div id="result" class="hidden">
+        <h2>Decision Output</h2>
+        <p><strong>Priority:</strong> <span id="priority"></span></p>
+        <p><strong>Confidence:</strong> <span id="confidence"></span></p>
+
+        <h3>Key Factors</h3>
+        <ul id="reasons"></ul>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
