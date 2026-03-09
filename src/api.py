@@ -15,29 +15,32 @@ app.add_middleware(
 )
 
 class DisasterInput(BaseModel):
-    severity_score: float
-    total_affected: int
-    infrastructure_damage: float
+    deaths: int
+    injured: int
+    affected: int
+    homeless: int
+    damage_usd: float
     area_affected: float
-
 
 @app.post("/predict")
 def predict(data: DisasterInput):
 
     # Map frontend input → ML features
     feature_dict = {
-        "Start Year": 2024,
-        "Total Deaths": int(data.severity_score * 50),
-        "No. Injured": int(data.total_affected * 0.05),
-        "No. Affected": data.total_affected,
-        "No. Homeless": int(data.total_affected * 0.1),
-        "Total Affected": data.total_affected,
-        "Total Damage ('000 US$)": int(data.infrastructure_damage * 100000),
-        "log_deaths": np.log1p(int(data.severity_score * 50)),
-        "log_injured": np.log1p(int(data.total_affected * 0.05)),
-        "log_affected": np.log1p(data.total_affected),
-        "log_damage": np.log1p(int(data.infrastructure_damage * 100000)),
-        "severity_score": data.severity_score,
+    "Start Year": 2024,
+
+    "Total Deaths": data.deaths,
+    "No. Injured": data.injured,
+    "No. Affected": data.affected,
+    "No. Homeless": data.homeless,
+    "Total Affected": data.affected,
+
+    "Total Damage ('000 US$)": data.damage_usd,
+
+    "log_deaths": np.log1p(data.deaths),
+    "log_injured": np.log1p(data.injured),
+    "log_affected": np.log1p(data.affected),
+    "log_damage": np.log1p(data.damage_usd),
     }
 
     return predict_with_explanation(feature_dict)

@@ -16,7 +16,6 @@ FEATURE_NAMES = [
     "log_injured",
     "log_affected",
     "log_damage",
-    "severity_score",
 ]
 
 PRIORITY_MAP = {0: "Low", 1: "Medium", 2: "High"}
@@ -80,7 +79,6 @@ if __name__ == "__main__":
         "log_injured": np.log1p(1300),
         "log_affected": np.log1p(93000),
         "log_damage": np.log1p(900000),
-        "severity_score": 8.9,
     }
 
     output = predict_with_explanation(input_features)

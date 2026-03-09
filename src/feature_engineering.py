@@ -9,17 +9,19 @@ def add_severity_score(df: pd.DataFrame) -> pd.DataFrame:
 
     # Fill missing values with 0 
     cols = [
-        "Total Deaths",
-        "No. Injured",
-        "Total Affected",
-        "Total Damage ('000 US$)"
+    "Total Deaths",
+    "No. Injured",
+    "No. Affected",
+    "No. Homeless",
+    "Total Affected",
+    "Total Damage ('000 US$)"
     ]
 
     for col in cols:
         if col in df.columns:
             df[col] = df[col].fillna(0)
         else:
-            raise ValueError(f"Missing required column: {col}")
+            df[col] = 0
 
     # Log transform to reduce skew
     df["log_deaths"] = np.log1p(df["Total Deaths"])

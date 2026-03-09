@@ -1,36 +1,40 @@
-document.getElementById("disasterForm").addEventListener("submit", async function (e) {
-    e.preventDefault();
+document.getElementById("predictForm").addEventListener("submit", async function(e){
 
-    const data = {
-        severity_score: parseFloat(document.getElementById("severity_score").value),
-        total_affected: parseInt(document.getElementById("total_affected").value),
-        infrastructure_damage: parseFloat(document.getElementById("infrastructure_damage").value),
-        area_affected: parseFloat(document.getElementById("area_affected").value)
-    };
+e.preventDefault();
 
-    const response = await fetch("http://127.0.0.1:8000/predict", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(data)
-    });
+const data = {
+deaths: Number(document.getElementById("deaths").value),
+injured: Number(document.getElementById("injured").value),
+affected: Number(document.getElementById("affected").value),
+homeless: Number(document.getElementById("homeless").value),
+damage_usd: Number(document.getElementById("damage").value),
+area_affected: Number(document.getElementById("area").value)
+};
 
-    const result = await response.json();
+const response = await fetch("http://localhost:8000/predict",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body: JSON.stringify(data)
+});
 
-    document.getElementById("result").classList.remove("hidden");
+const result = await response.json();
 
-    const prioritySpan = document.getElementById("priority");
-    prioritySpan.innerText = result.priority;
-    prioritySpan.className = result.priority;
+let output = "<b>Predicted Priority:</b> " + result.priority + "<br><br>";
 
-    document.getElementById("confidence").innerText = result.confidence;
+if(result.confidence){
+output += "<b>Confidence:</b> " + (result.confidence * 100).toFixed(2) + "%<br><br>";
+}
 
-    const reasonsList = document.getElementById("reasons");
-    reasonsList.innerHTML = "";
-    result.reasons.forEach(r => {
-        const li = document.createElement("li");
-        li.innerText = r;
-        reasonsList.appendChild(li);
-    });
+if(result.top_factors){
+output += "<b>Key Factors:</b><br>";
+
+for(const key in result.top_factors){
+output += key + " : " + result.top_factors[key].toFixed(3) + "<br>";
+}
+}
+
+document.getElementById("result").innerHTML = output;
+
 });
