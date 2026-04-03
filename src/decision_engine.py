@@ -1,3 +1,8 @@
+"""
+decision_engine.py — updated for Phase 2
+Supports RandomForest, XGBoost, and LightGBM interchangeably.
+"""
+
 import numpy as np
 import pandas as pd
 from src.utils import load_model
@@ -21,28 +26,38 @@ FEATURE_NAMES = [
 PRIORITY_MAP = {0: "Low", 1: "Medium", 2: "High"}
 
 
-# -------------------------
-# Prediction + Explanation
-# -------------------------
-def predict_with_explanation(feature_dict):
+def _get_feature_importances(model, feature_names: list) -> pd.DataFrame:
+    """Works for RandomForest, XGBoost, and LightGBM."""
+    try:
+        importances = model.feature_importances_
+    except AttributeError:
+        # Fallback: equal importance
+        importances = np.ones(len(feature_names)) / len(feature_names)
+
+    return (
+        pd.DataFrame({"feature": feature_names, "importance": importances})
+        .sort_values("importance", ascending=False)
+    )
+
+
+def predict_with_explanation(feature_dict: dict) -> dict:
     model = load_model(MODEL_PATH)
 
-    X = pd.DataFrame([feature_dict], columns=FEATURE_NAMES)
+    # Use feature names the model was trained on if stored
+    names = (
+        list(model.feature_names_in_)
+        if hasattr(model, "feature_names_in_")
+        else FEATURE_NAMES
+    )
 
-    proba = model.predict_proba(X)[0]
+    X = pd.DataFrame([feature_dict], columns=names)
+
+    proba      = model.predict_proba(X)[0]
     prediction = int(np.argmax(proba))
     confidence = min(round(float(np.max(proba)), 2), 0.95)
 
-    
-    # Feature importance (global but valid)
-    importances = model.feature_importances_
-
-    importance_df = pd.DataFrame({
-        "feature": FEATURE_NAMES,
-        "importance": importances
-    }).sort_values(by="importance", ascending=False)
-
-    top_features = importance_df.head(3)
+    importance_df = _get_feature_importances(model, names)
+    top_features  = importance_df.head(3)
 
     explanation = (
         f"The model classified this disaster as **{PRIORITY_MAP[prediction]} priority** "
@@ -55,18 +70,18 @@ def predict_with_explanation(feature_dict):
     ]
 
     return {
-        "priority": PRIORITY_MAP[prediction],
-        "confidence": confidence,
-        "reasons": reasons,
+        "priority":    PRIORITY_MAP[prediction],
+        "confidence":  confidence,
+        "reasons":     reasons,
         "explanation": explanation,
+        "probabilities": {
+            PRIORITY_MAP[i]: round(float(p), 3)
+            for i, p in enumerate(proba)
+        },
     }
 
 
-# -------------------------
-# Main
-# -------------------------
 if __name__ == "__main__":
-
     input_features = {
         "Start Year": 2018,
         "Total Deaths": 420,
@@ -75,14 +90,13 @@ if __name__ == "__main__":
         "No. Homeless": 12000,
         "Total Affected": 93000,
         "Total Damage ('000 US$)": 900000,
-        "log_deaths": np.log1p(420),
-        "log_injured": np.log1p(1300),
+        "log_deaths":   np.log1p(420),
+        "log_injured":  np.log1p(1300),
         "log_affected": np.log1p(93000),
-        "log_damage": np.log1p(900000),
+        "log_damage":   np.log1p(900000),
     }
 
     output = predict_with_explanation(input_features)
-
     print("\n🧠 ML Decision Support Output:\n")
     for k, v in output.items():
         print(f"{k}: {v}")
