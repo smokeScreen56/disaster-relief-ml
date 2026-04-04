@@ -16,7 +16,7 @@ import pandas as pd
 from pathlib import Path
 from scipy import stats
 
-# ── SDV / CTGAN ──────────────────────────────────────────────────────────────
+# ── SDV / CTGAN ────────────────────────────────────────────────────────────
 from sdv.single_table import CTGANSynthesizer
 from sdv.metadata import SingleTableMetadata
 
