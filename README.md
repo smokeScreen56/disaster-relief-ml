@@ -1,6 +1,10 @@
 # Disaster Relief Decision System
 
-ML + LLM pipeline that classifies disaster severity (Low / Medium / High) and generates actionable response recommendations.
+A decision support tool for disaster response teams. Given a disaster event's casualty and damage figures, it predicts the severity level (Low / Medium / High) using a trained ML model and generates a structured response narrative via a free LLM — helping coordinators prioritise resource allocation faster.
+
+Built as a hybrid ML pipeline: historical EM-DAT disaster records are augmented with CTGAN-generated synthetic data and SMOTE class balancing, then used to train and compare three classifiers. The best model is served through a FastAPI backend paired with a retro terminal-style web UI.
+
+---
 
 ## Stack
 
@@ -9,6 +13,8 @@ ML + LLM pipeline that classifies disaster severity (Low / Medium / High) and ge
 - **LLM** — Gemini 1.5 Flash → Groq/Llama 3 → static fallback
 - **API** — FastAPI `/predict` endpoint
 - **Frontend** — Single-file terminal-style UI (`index.html`)
+
+---
 
 ## Setup
 
@@ -25,6 +31,8 @@ GEMINI_API_KEY=your-key   # https://aistudio.google.com/app/apikey
 GROQ_API_KEY=your-key     # https://console.groq.com/keys
 ```
 
+---
+
 ## Usage
 
 ```bash
@@ -34,6 +42,8 @@ python src/model_comparison.py   # 3. train & compare models
 uvicorn src.api:app --reload     # 4. start API
 # open index.html in browser     # 5. launch UI
 ```
+
+---
 
 ## API
 
@@ -45,6 +55,8 @@ uvicorn src.api:app --reload     # 4. start API
 ```
 
 Returns `priority`, `confidence`, `probabilities`, `reasons`, and `llm_explanation`.
+
+---
 
 ## Data Source
 
