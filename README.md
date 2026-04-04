@@ -1,66 +1,55 @@
-# Disaster Relief Priority Prediction System
+# Disaster Relief Decision System
 
-## 📌 Overview
-This project is a machine learning–based decision support system designed to assist disaster management authorities in prioritizing disaster events for effective relief planning.  
-It analyzes historical disaster data to predict the severity level of a disaster and supports informed allocation of emergency resources.
+ML + LLM pipeline that classifies disaster severity (Low / Medium / High) and generates actionable response recommendations.
 
-The system follows a modular and scalable architecture, making it suitable for real-world disaster response planning and future extensions such as AI-based decision explanations.
+## Stack
 
----
+- **Data** — EM-DAT historical records + CTGAN synthetic augmentation + SMOTE balancing
+- **Models** — RandomForest, XGBoost, LightGBM (auto-selects best by F1-macro)
+- **LLM** — Gemini 1.5 Flash → Groq/Llama 3 → static fallback
+- **API** — FastAPI `/predict` endpoint
+- **Frontend** — Single-file terminal-style UI (`index.html`)
 
-## 🎯 Project Objectives
-- Design and develop a robust software system for disaster relief planning  
-- Analyze historical disaster data to identify critical patterns  
-- Implement machine learning models for disaster priority prediction  
-- Integrate explainable AI / LLM-based decision support (future scope)  
-- Ensure modular, maintainable, and scalable system architecture  
-- Provide accurate and timely allocation recommendations  
+## Setup
 
----
+```bash
+git clone https://github.com/smokeScreen56/disaster-relief-ml.git
+cd disaster-relief-ml
+python -m venv .venv && .venv\Scripts\activate
+pip install -r requirements.txt
+```
 
-## 🗂 Dataset
-- **Source:** EM-DAT (International Disaster Database)
-- **Format:** Excel (`emdat.xlsx`)
-- **Key attributes used:**
-  - Total deaths
-  - Injuries
-  - Population affected
-  - Economic damage
-  - Disaster year and type
+Create `.env` in the project root:
+```
+GEMINI_API_KEY=your-key   # https://aistudio.google.com/app/apikey
+GROQ_API_KEY=your-key     # https://console.groq.com/keys
+```
 
----
+## Usage
 
-## 🧠 Methodology
+```bash
+python src/prepare_data.py       # 1. prepare historical data
+python src/synthetic_data.py     # 2. generate hybrid dataset
+python src/model_comparison.py   # 3. train & compare models
+uvicorn src.api:app --reload     # 4. start API
+# open index.html in browser     # 5. launch UI
+```
 
-### 1. Data Preprocessing
-- Selected relevant disaster attributes
-- Handled missing values using domain-standard techniques
-- Removed incomplete categorical records
+## API
 
-### 2. Feature Engineering
-- Log transformation to reduce skewness
-- Computed a weighted **severity score** using:
-  - Deaths
-  - Injuries
-  - Affected population
-  - Economic damage
-- Converted severity scores into three classes:
-  - **Low**
-  - **Medium**
-  - **High**
+`POST /predict`
 
-### 3. Machine Learning Model
-- Multi-class classification model
-- Trained on engineered severity features
-- Achieved **~96% accuracy** on validation data
-- Model persisted using `joblib`
+```json
+{ "deaths": 420, "injured": 1300, "affected": 80000,
+  "homeless": 12000, "damage_usd": 900000, "area_affected": 2400 }
+```
 
----
+Returns `priority`, `confidence`, `probabilities`, `reasons`, and `llm_explanation`.
 
-## 📊 Results
-- High accuracy and balanced precision/recall across all severity classes
-- Reliable prediction of disaster priority levels
-- Suitable for decision-support use cases
+## Data Source
 
----
+EM-DAT International Disaster Database — [emdat.be](https://www.emdat.be)
 
+## License
+
+MIT
