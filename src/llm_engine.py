@@ -1,31 +1,3 @@
-"""
-Phase 3 — Free LLM Integration
-================================
-Replaces OpenAI with two free alternatives:
-
-  Primary  : Google Gemini 1.5 Flash   (google-generativeai)
-             → Free tier: 15 req/min, 1M tokens/day
-             → Set env: GEMINI_API_KEY
-
-  Fallback : Groq + Llama 3.1 8B       (groq)
-             → Free tier: 30 req/min, 14,400 req/day
-             → Set env: GROQ_API_KEY
-
-Function signature is identical to the original llm_engine.py —
-no changes needed in api.py or anywhere else that calls get_llm_explanation().
-
-Get free API keys:
-  Gemini → https://aistudio.google.com/app/apikey
-  Groq   → https://console.groq.com/keys
-
-Set keys (add to your .env or shell):
-  export GEMINI_API_KEY="your-key-here"
-  export GROQ_API_KEY="your-key-here"
-
-Install:
-  pip install google-generativeai groq python-dotenv
-"""
-
 import os
 from dotenv import load_dotenv
 
@@ -36,7 +8,7 @@ GROQ_API_KEY   = os.getenv("GROQ_API_KEY")
 
 PRIORITY_MAP = {0: "Low", 1: "Medium", 2: "High"}
 
-# ── Shared system prompt ──────────────────────────────────────────────────────
+#Shared system prompt 
 SYSTEM_PROMPT = """You are an expert disaster management decision support system.
 Your role is to analyse disaster event data, explain the severity classification,
 and provide clear, actionable emergency response recommendations.
@@ -46,7 +18,7 @@ def _build_user_prompt(priority: str, features: dict) -> str:
     feature_lines = "\n".join(
         f"  • {k}: {v:,.0f}" if isinstance(v, (int, float)) else f"  • {k}: {v}"
         for k, v in features.items()
-        if not str(k).startswith("log_")        # hide log-transformed cols
+        if not str(k).startswith("log_")        
     )
     return f"""Disaster event data:
 {feature_lines}
@@ -60,10 +32,6 @@ Please provide:
 4. Key risks to monitor
 """
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Provider 1 — Google Gemini 1.5 Flash (primary)
-# ─────────────────────────────────────────────────────────────────────────────
 def _call_gemini(priority: str, features: dict) -> str:
     import google.generativeai as genai
 
@@ -82,9 +50,6 @@ def _call_gemini(priority: str, features: dict) -> str:
     return response.text
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Provider 2 — Groq + Llama 3.1 8B (fallback)
-# ─────────────────────────────────────────────────────────────────────────────
 def _call_groq(priority: str, features: dict) -> str:
     from groq import Groq
 
@@ -102,22 +67,17 @@ def _call_groq(priority: str, features: dict) -> str:
     return response.choices[0].message.content
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Public API — identical signature to original llm_engine.py
-# ─────────────────────────────────────────────────────────────────────────────
 def get_llm_explanation(priority, features) -> str:
     """
     priority : int (0/1/2) or str ("Low"/"Medium"/"High")
     features : dict of disaster feature values
     Returns  : str — LLM-generated explanation and recommendations
     """
-    # Normalise priority to string label
     if isinstance(priority, (int, float)):
         priority_label = PRIORITY_MAP.get(int(priority), str(priority))
     else:
         priority_label = str(priority)
 
-    # Try Gemini first, fall back to Groq, then to static fallback
     if GEMINI_API_KEY:
         try:
             return _call_gemini(priority_label, features)
@@ -133,9 +93,6 @@ def get_llm_explanation(priority, features) -> str:
     return fallback_explanation(priority_label)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Static fallback (no API keys needed)
-# ─────────────────────────────────────────────────────────────────────────────
 def fallback_explanation(priority, features=None, error_msg=None) -> str:
     if isinstance(priority, (int, float)):
         priority = PRIORITY_MAP.get(int(priority), str(priority))
@@ -191,9 +148,6 @@ Risks to Monitor:
     return result
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Quick test
-# ─────────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     test_features = {
         "Start Year": 2024,
@@ -206,5 +160,5 @@ if __name__ == "__main__":
     }
 
     print("Testing LLM engine …\n")
-    result = get_llm_explanation(2, test_features)   # 2 = High
+    result = get_llm_explanation(2, test_features)  
     print(result)

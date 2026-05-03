@@ -61,7 +61,3 @@ Returns `priority`, `confidence`, `probabilities`, `reasons`, and `llm_explanati
 ## Data Source
 
 EM-DAT International Disaster Database — [emdat.be](https://www.emdat.be)
-
-## License
-
-MIT

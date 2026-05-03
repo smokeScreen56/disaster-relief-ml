@@ -1,17 +1,3 @@
-"""
-Phase 2 — Multi-Model Training & Comparison
-=============================================
-Trains RandomForest (baseline), XGBoost, and LightGBM on the hybrid dataset,
-compares them on F1-macro, Accuracy, and ROC-AUC, prints a summary table,
-and saves the best model as models/priority_model.pkl.
-
-Usage:
-    python src/model_comparison.py
-
-Dependencies:
-    pip install xgboost lightgbm scikit-learn pandas numpy tabulate
-"""
-
 import numpy as np
 import pandas as pd
 import joblib
@@ -36,11 +22,8 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Config
-# ─────────────────────────────────────────────────────────────────────────────
 HYBRID_DATA_PATH  = "data/processed/hybrid_dataset.csv"
-HIST_DATA_PATH    = "data/processed/disaster_features.csv"   # fallback
+HIST_DATA_PATH    = "data/processed/disaster_features.csv"  
 MODEL_SAVE_PATH   = "models/priority_model.pkl"
 REPORT_SAVE_PATH  = "models/comparison_report.csv"
 PLOT_SAVE_PATH    = "models/comparison_plot.png"
@@ -66,10 +49,6 @@ FEATURE_COLS = [
 
 TARGET_COL = "severity_level"
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Model definitions
-# ─────────────────────────────────────────────────────────────────────────────
 def get_models():
     return {
         "RandomForest (baseline)": RandomForestClassifier(
@@ -105,15 +84,11 @@ def get_models():
     }
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Data loading
-# ─────────────────────────────────────────────────────────────────────────────
 def load_data() -> tuple:
     path = HYBRID_DATA_PATH if Path(HYBRID_DATA_PATH).exists() else HIST_DATA_PATH
     print(f"📂 Loading data from: {path}")
     df = pd.read_csv(path)
 
-    # Only keep columns that actually exist (hybrid has 'source', historical may not)
     available_features = [c for c in FEATURE_COLS if c in df.columns]
     X = df[available_features].values
     y = df[TARGET_COL].values
@@ -130,22 +105,19 @@ def load_data() -> tuple:
     return X_train, X_test, y_train, y_test, available_features
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Evaluation helpers
-# ─────────────────────────────────────────────────────────────────────────────
 def evaluate(model, X_train, X_test, y_train, y_test) -> dict:
-    # Hold-out metrics
+    
     y_pred  = model.predict(X_test)
     y_proba = model.predict_proba(X_test)
 
     acc     = accuracy_score(y_test, y_pred)
     f1      = f1_score(y_test, y_pred, average="macro")
 
-    # ROC-AUC (OvR, macro)
+
     y_bin   = label_binarize(y_test, classes=CLASSES)
     roc_auc = roc_auc_score(y_bin, y_proba, multi_class="ovr", average="macro")
 
-    # Cross-validated F1 (more reliable on smaller datasets)
+
     cv = StratifiedKFold(n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_STATE)
     cv_f1 = cross_val_score(model, X_train, y_train,
                              scoring="f1_macro", cv=cv, n_jobs=-1).mean()
@@ -157,10 +129,6 @@ def evaluate(model, X_train, X_test, y_train, y_test) -> dict:
         f"CV F1 ({CV_FOLDS}-fold)": round(cv_f1, 4),
     }
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Training loop
-# ─────────────────────────────────────────────────────────────────────────────
 def train_all(X_train, X_test, y_train, y_test) -> tuple:
     models    = get_models()
     results   = {}
@@ -184,15 +152,10 @@ def train_all(X_train, X_test, y_train, y_test) -> tuple:
     print("=" * 60)
     return trained, results
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Comparison table + winner
-# ─────────────────────────────────────────────────────────────────────────────
 def summarise(results: dict) -> str:
     df = pd.DataFrame(results).T
     df.index.name = "Model"
 
-    # Rank by F1-macro (primary) then ROC-AUC (tiebreak)
     df["Score"] = df["F1-macro"] * 0.6 + df["ROC-AUC"] * 0.4
     df = df.sort_values("Score", ascending=False)
     winner = df.index[0]
@@ -211,9 +174,6 @@ def summarise(results: dict) -> str:
     return winner, df
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Per-model classification report
-# ─────────────────────────────────────────────────────────────────────────────
 def print_reports(trained: dict, X_test, y_test) -> None:
     print("\n📋 PER-CLASS CLASSIFICATION REPORTS")
     for name, model in trained.items():
@@ -222,23 +182,16 @@ def print_reports(trained: dict, X_test, y_test) -> None:
         print(classification_report(y_test, y_pred, target_names=CLASS_NAMES))
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Save best model
-# ─────────────────────────────────────────────────────────────────────────────
 def save_best(trained: dict, winner: str, feature_names: list) -> None:
     Path(MODEL_SAVE_PATH).parent.mkdir(parents=True, exist_ok=True)
     best_model = trained[winner]
 
-    # Store feature names on model object for decision_engine.py compatibility
     best_model.feature_names_in_ = np.array(feature_names)
 
     joblib.dump(best_model, MODEL_SAVE_PATH)
     print(f"💾 Saved best model ({winner}) → {MODEL_SAVE_PATH}")
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Comparison bar chart
-# ─────────────────────────────────────────────────────────────────────────────
 def plot_comparison(df_results: pd.DataFrame) -> None:
     metrics = ["Accuracy", "F1-macro", "ROC-AUC"]
     df_plot = df_results[metrics].copy()
@@ -270,17 +223,11 @@ def plot_comparison(df_results: pd.DataFrame) -> None:
     print(f"📈 Comparison chart saved → {PLOT_SAVE_PATH}")
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Save CSV report
-# ─────────────────────────────────────────────────────────────────────────────
 def save_report(df_results: pd.DataFrame) -> None:
     df_results.to_csv(REPORT_SAVE_PATH)
     print(f"📄 Report saved → {REPORT_SAVE_PATH}")
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Main
-# ─────────────────────────────────────────────────────────────────────────────
 def run_comparison():
     print("\n🚀 Phase 2 — Multi-model training & comparison\n")
 

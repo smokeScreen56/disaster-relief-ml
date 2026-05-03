@@ -3,11 +3,7 @@ import numpy as np
 
 
 def add_severity_score(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Creates a severity score and severity level for each disaster event.
-    """
 
-    # Fill missing values with 0 
     cols = [
     "Total Deaths",
     "No. Injured",
@@ -23,13 +19,11 @@ def add_severity_score(df: pd.DataFrame) -> pd.DataFrame:
         else:
             df[col] = 0
 
-    # Log transform to reduce skew
     df["log_deaths"] = np.log1p(df["Total Deaths"])
     df["log_injured"] = np.log1p(df["No. Injured"])
     df["log_affected"] = np.log1p(df["Total Affected"])
     df["log_damage"] = np.log1p(df["Total Damage ('000 US$)"])
 
-    # Weighted severity score
     df["severity_score"] = (
         0.4 * df["log_deaths"]
         + 0.25 * df["log_affected"]
@@ -41,11 +35,7 @@ def add_severity_score(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def add_severity_level(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Converts severity score into Low / Medium / High labels.
-    """
 
-    # Create percentile-based thresholds
     low_threshold = df["severity_score"].quantile(0.33)
     high_threshold = df["severity_score"].quantile(0.66)
 

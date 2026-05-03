@@ -1,8 +1,3 @@
-"""
-api.py — updated for Phase 3
-Adds LLM explanation from get_llm_explanation() to every /predict response.
-"""
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
