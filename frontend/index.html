@@ -284,7 +284,8 @@
     </div>
     <div class="header-right">
       <div id="clock">--:--:--</div>
-      <div>MODEL: HYBRID-ML v2</div>
+      <div>MODEL: LOG-FEATURE v3</div>
+      <div style="color:var(--green);font-size:10px;">ACCURACY: 96.7%</div>
     </div>
   </header>
 
@@ -308,16 +309,8 @@
             <input type="number" name="affected" min="0" placeholder="0" required>
           </div>
           <div class="field">
-            <label>No. Homeless</label>
-            <input type="number" name="homeless" min="0" placeholder="0" required>
-          </div>
-          <div class="field">
             <label>Damage (USD thousands)</label>
             <input type="number" name="damage_usd" min="0" step="0.01" placeholder="0.00" required>
-          </div>
-          <div class="field">
-            <label>Area Affected (km²)</label>
-            <input type="number" name="area_affected" min="0" step="0.01" placeholder="0.00" required>
           </div>
           <button type="submit" class="btn-submit" id="submitBtn">
             <span id="btnText">▶ Analyse Event</span>
@@ -339,8 +332,8 @@
           <div class="section-label">Quick Scenarios</div>
           <div class="scenario-list">
             <button class="scenario-btn" data-scenario="high">A — High severity flood</button>
-            <button class="scenario-btn" data-scenario="medium">B — Medium severity earthquake</button>
-            <button class="scenario-btn" data-scenario="low">C — Low severity windstorm</button>
+            <button class="scenario-btn" data-scenario="medium">B — Medium severity storm</button>
+            <button class="scenario-btn" data-scenario="low">C — Low severity incident</button>
           </div>
         </div>
 
@@ -365,9 +358,9 @@
   </div>
 
   <footer>
-    <div><span class="status-dot"></span>DRDS online — hybrid dataset — ML+LLM pipeline</div>
+    <div><span class="status-dot"></span>DRDS online — log features only — ML+LLM pipeline | <span style="color:var(--green)">96.7% accuracy</span></div>
     <div id="req-count">Requests: 0</div>
-    <div>v2.0 phase 3</div>
+    <div>v3.0 phase 3</div>
   </footer>
 
 </div>
@@ -384,9 +377,9 @@
 
   // Scenarios
   const SCENARIOS = {
-    high:   { deaths:420, injured:1300, affected:80000, homeless:12000, damage_usd:900000, area_affected:2400 },
-    medium: { deaths:85,  injured:430,  affected:15000, homeless:3000,  damage_usd:120000, area_affected:650 },
-    low:    { deaths:4,   injured:22,   affected:800,   homeless:0,     damage_usd:8000,   area_affected:90 },
+    high:   { deaths:420, injured:1300, affected:80000, damage_usd:900000 },
+    medium: { deaths:25,  injured:10,   affected:0,     damage_usd:200000 },
+    low:    { deaths:8,   injured:0,    affected:0,     damage_usd:0      },
   };
 
   document.querySelectorAll('.scenario-btn').forEach(btn => {
@@ -515,9 +508,7 @@
       deaths:        parseInt(form.deaths.value)        || 0,
       injured:       parseInt(form.injured.value)       || 0,
       affected:      parseInt(form.affected.value)      || 0,
-      homeless:      parseInt(form.homeless.value)      || 0,
       damage_usd:    parseFloat(form.damage_usd.value)  || 0,
-      area_affected: parseFloat(form.area_affected.value) || 0,
     };
 
     btn.disabled = true;

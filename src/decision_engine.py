@@ -1,39 +1,20 @@
-"""
-decision_engine.py — updated for Phase 2
-Supports RandomForest, XGBoost, and LightGBM interchangeably.
-"""
-
 import numpy as np
 import pandas as pd
+import joblib
 from src.utils import load_model
 
-MODEL_PATH = "models/priority_model.pkl"
+MODEL_PATH     = "models/priority_model.pkl"
+THRESHOLD_PATH = "models/severity_thresholds.pkl"
 
-FEATURE_NAMES = [
-    "Start Year",
-    "Total Deaths",
-    "No. Injured",
-    "No. Affected",
-    "No. Homeless",
-    "Total Affected",
-    "Total Damage ('000 US$)",
-    "log_deaths",
-    "log_injured",
-    "log_affected",
-    "log_damage",
-]
-
-PRIORITY_MAP = {0: "Low", 1: "Medium", 2: "High"}
+FEATURE_NAMES = ["log_deaths", "log_injured", "log_affected", "log_damage"]
+PRIORITY_MAP  = {0: "Low", 1: "Medium", 2: "High"}
 
 
-def _get_feature_importances(model, feature_names: list) -> pd.DataFrame:
-    """Works for RandomForest, XGBoost, and LightGBM."""
+def _get_feature_importances(model, feature_names):
     try:
         importances = model.feature_importances_
     except AttributeError:
-        # Fallback: equal importance
         importances = np.ones(len(feature_names)) / len(feature_names)
-
     return (
         pd.DataFrame({"feature": feature_names, "importance": importances})
         .sort_values("importance", ascending=False)
@@ -41,14 +22,8 @@ def _get_feature_importances(model, feature_names: list) -> pd.DataFrame:
 
 
 def predict_with_explanation(feature_dict: dict) -> dict:
-    model = load_model(MODEL_PATH)
-
-    # Use feature names the model was trained on if stored
-    names = (
-        list(model.feature_names_in_)
-        if hasattr(model, "feature_names_in_")
-        else FEATURE_NAMES
-    )
+    model, saved_names = load_model(MODEL_PATH)
+    names = saved_names if saved_names else FEATURE_NAMES
 
     X = pd.DataFrame([feature_dict], columns=names)
 
@@ -70,10 +45,10 @@ def predict_with_explanation(feature_dict: dict) -> dict:
     ]
 
     return {
-        "priority":    PRIORITY_MAP[prediction],
-        "confidence":  confidence,
-        "reasons":     reasons,
-        "explanation": explanation,
+        "priority":      PRIORITY_MAP[prediction],
+        "confidence":    confidence,
+        "reasons":       reasons,
+        "explanation":   explanation,
         "probabilities": {
             PRIORITY_MAP[i]: round(float(p), 3)
             for i, p in enumerate(proba)
@@ -82,21 +57,20 @@ def predict_with_explanation(feature_dict: dict) -> dict:
 
 
 if __name__ == "__main__":
-    input_features = {
-        "Start Year": 2018,
-        "Total Deaths": 420,
-        "No. Injured": 1300,
-        "No. Affected": 80000,
-        "No. Homeless": 12000,
-        "Total Affected": 93000,
-        "Total Damage ('000 US$)": 900000,
-        "log_deaths":   np.log1p(420),
-        "log_injured":  np.log1p(1300),
-        "log_affected": np.log1p(93000),
-        "log_damage":   np.log1p(900000),
-    }
-
-    output = predict_with_explanation(input_features)
-    print("\n🧠 ML Decision Support Output:\n")
-    for k, v in output.items():
-        print(f"{k}: {v}")
+    print("\n🧪 Testing all three severity levels:\n")
+    tests = [
+        ("LOW  — 10 deaths, 0 injured, 0 affected, $0 damage",
+         {"log_deaths": np.log1p(10), "log_injured": np.log1p(0),
+          "log_affected": np.log1p(0), "log_damage": np.log1p(0)}),
+        ("MED  — 14 deaths, 0 injured, 0 affected, $600k damage",
+         {"log_deaths": np.log1p(14), "log_injured": np.log1p(0),
+          "log_affected": np.log1p(0), "log_damage": np.log1p(600000)}),
+        ("HIGH — 420 deaths, 1300 injured, 80000 affected, $900k damage",
+         {"log_deaths": np.log1p(420), "log_injured": np.log1p(1300),
+          "log_affected": np.log1p(80000), "log_damage": np.log1p(900000)}),
+    ]
+    for label, features in tests:
+        result = predict_with_explanation(features)
+        print(f"{label}")
+        print(f"  → Predicted: {result['priority']} (confidence: {result['confidence']})")
+        print(f"  → Proba: {result['probabilities']}\n")

@@ -21,26 +21,17 @@ class DisasterInput(BaseModel):
     deaths: int
     injured: int
     affected: int
-    homeless: int
     damage_usd: float
-    area_affected: float
 
 
 @app.post("/predict")
 def predict(data: DisasterInput):
 
     feature_dict = {
-        "Start Year":               2024,
-        "Total Deaths":             data.deaths,
-        "No. Injured":              data.injured,
-        "No. Affected":             data.affected,
-        "No. Homeless":             data.homeless,
-        "Total Affected":           data.affected,
-        "Total Damage ('000 US$)":  data.damage_usd,
-        "log_deaths":               np.log1p(data.deaths),
-        "log_injured":              np.log1p(data.injured),
-        "log_affected":             np.log1p(data.affected),
-        "log_damage":               np.log1p(data.damage_usd),
+        "log_deaths":   np.log1p(data.deaths),
+        "log_injured":  np.log1p(data.injured),
+        "log_affected": np.log1p(data.affected),
+        "log_damage":   np.log1p(data.damage_usd),
     }
 
     # ML prediction
