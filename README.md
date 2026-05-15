@@ -1,18 +1,18 @@
 # Disaster Relief Decision System
 
-A decision support tool for disaster response teams. Given a disaster event's casualty and damage figures, it predicts the severity level (Low / Medium / High) using a trained ML model and generates a structured response narrative via a free LLM — helping coordinators prioritise resource allocation faster.
+A decision support tool for disaster response teams. Given a disaster event's casualty and damage figures, it predicts the severity level (Low / Medium / High) using a trained ML model and generates a structured response narrative via a free LLM helping coordinators prioritise resource allocation faster.
 
-Built as a hybrid ML pipeline: historical EM-DAT disaster records are augmented with CTGAN-generated synthetic data and SMOTE class balancing, then used to train and compare three classifiers. The best model is served through a FastAPI backend paired with a retro terminal-style web UI.
+Built as a hybrid ML pipeline: historical EM-DAT disaster records are augmented with CTGAN-generated synthetic data and SMOTE class balancing, then used to train and compare three classifiers. The best model is served through a FastAPI backend paired with a retro terminal style web UI.
 
 ---
 
 ## Stack
 
-- **Data** — EM-DAT historical records + CTGAN synthetic augmentation + SMOTE balancing
-- **Models** — RandomForest, XGBoost, LightGBM (auto-selects best by F1-macro)
-- **LLM** — Gemini 1.5 Flash → Groq/Llama 3 → static fallback
-- **API** — FastAPI `/predict` endpoint
-- **Frontend** — Single-file terminal-style UI (`index.html`)
+- **Data** - EM-DAT historical records + CTGAN synthetic augmentation + SMOTE balancing
+- **Models** - RandomForest, XGBoost, LightGBM (auto-selects best by F1-macro)
+- **LLM** - Gemini 1.5 Flash → Groq/Llama 3 → static fallback
+- **API** - FastAPI `/predict` endpoint
+- **Frontend** - Single-file terminal-style UI (`index.html`)
 
 ---
 
